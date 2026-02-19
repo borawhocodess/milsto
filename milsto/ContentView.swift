@@ -244,32 +244,32 @@ struct MilestoneRowView: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
-            HStack {
-                VStack(alignment: .leading) {
-                    if !milestone.notes.isEmpty {
-                        Text(milestone.notes)
-                            .font(.footnote)
-                            .foregroundStyle(.tertiary)
-                            .opacity(showNotes ? 1 : 0)
-                    }
+            VStack(alignment: .leading) {
+                if !milestone.notes.isEmpty {
+                    Text(milestone.notes)
+                        .font(.footnote)
+                        .foregroundStyle(.tertiary)
+                        .opacity(showNotes ? 1 : 0)
+                }
 
+                HStack(alignment: .firstTextBaseline) {
                     Text(milestone.title)
                         .font(.headline)
                         .opacity(showTitle ? 1 : 0)
 
-                    Text(milestone.target.formatted(.dateTime.year().month().day().hour().minute()))
-                        .font(.footnote)
-                        .foregroundStyle(.tertiary)
-                        .opacity(showTarget ? 1 : 0)
+                    Spacer()
+
+                    Text(countdownString(to: milestone.target, now: timeline.date))
+                        .font(.subheadline)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .opacity(showCountdown ? 1 : 0)
                 }
 
-                Spacer()
-
-                Text(countdownString(to: milestone.target, now: timeline.date))
-                    .font(.subheadline)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .opacity(showCountdown ? 1 : 0)
+                Text(milestone.target.formatted(.dateTime.year().month().day().hour().minute()))
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
+                    .opacity(showTarget ? 1 : 0)
             }
             .padding(.trailing)
         }
