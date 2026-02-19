@@ -11,12 +11,14 @@ import SwiftData
 @Model
 final class Milestone {
     var id: UUID = UUID()
+    var createdAt: Date = Date()
     var target: Date = Date()
     var title: String = ""
     var notes: String = ""
 
-    init(id: UUID = UUID(), target: Date = Date(), title: String, notes: String = "") {
+    init(id: UUID = UUID(), createdAt: Date = Date(), target: Date = Date(), title: String, notes: String = "") {
         self.id = id
+        self.createdAt = createdAt
         self.target = target
         self.title = title
         self.notes = notes
@@ -122,7 +124,7 @@ struct AddView: View {
 
 struct ListView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \Milestone.target, order: .reverse) private var milestones: [Milestone]
+    @Query(sort: \Milestone.createdAt, order: .reverse) private var milestones: [Milestone]
     @State private var searchText = ""
 
     @AppStorage("showTitle") private var showTitle: Bool = true
@@ -143,7 +145,7 @@ struct ListView: View {
 
     var groupedMilestones: [(key: Date, values: [Milestone])] {
         let grouped = Dictionary(grouping: filteredMilestones) {
-            Calendar.current.startOfDay(for: $0.target)
+            Calendar.current.startOfDay(for: $0.createdAt)
         }
         return grouped.map { (key: $0.key, values: $0.value) }
             .sorted { $0.key > $1.key }
@@ -462,10 +464,10 @@ class SampleData {
 
 extension Milestone {
     static let sampleData = [
-        Milestone(target: Date().addingTimeInterval(3600), title: "Leave for airport", notes: "Passport + ticket"),
-        Milestone(target: Date().addingTimeInterval(7200), title: "Project deadline", notes: "Submit final report"),
-        Milestone(target: Calendar.current.date(byAdding: .day, value: 1, to: Date())!, title: "Gym", notes: "Leg day"),
-        Milestone(target: Calendar.current.date(byAdding: .day, value: 2, to: Date())!, title: "Pay rent"),
-        Milestone(target: Calendar.current.date(byAdding: .day, value: 7, to: Date())!, title: "Weekend trip", notes: "Pack light")
+        Milestone(createdAt: Date(), target: Date().addingTimeInterval(3600), title: "Leave for airport", notes: "Passport + ticket"),
+        Milestone(createdAt: Date(), target: Date().addingTimeInterval(7200), title: "Project deadline", notes: "Submit final report"),
+        Milestone(createdAt: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, target: Calendar.current.date(byAdding: .day, value: 1, to: Date())!, title: "Gym", notes: "Leg day"),
+        Milestone(createdAt: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, target: Calendar.current.date(byAdding: .day, value: 2, to: Date())!, title: "Pay rent"),
+        Milestone(createdAt: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, target: Calendar.current.date(byAdding: .day, value: 7, to: Date())!, title: "Weekend trip", notes: "Pack light")
     ]
 }
