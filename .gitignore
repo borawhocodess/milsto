@@ -1,32 +1,7 @@
-# Xcode user data
-xcuserdata/
 *.xcuserstate
-*.xcscmblueprint
 
-# Build artifacts
-build/
+xcuserdata/
 DerivedData/
-*.moved-aside
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
+build/
 
-# Swift Package Manager
-.build/
-Packages/
-
-# CocoaPods
-Pods/
-
-# Carthage
-Carthage/Build/
-
-# Fastlane
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots/**/*.png
-fastlane/test_output
-
-# macOS
 .DS_Store
