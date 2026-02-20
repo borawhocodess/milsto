@@ -48,13 +48,19 @@ enum CountdownDisplayFormat: String, CaseIterable, Identifiable {
 final class Config {
     var countdownFontSize: Double = Config.defaultCountdownFontSize
     var countdownFormatRaw: String = Config.defaultCountdownFormatRaw
+    var includeTarget: Bool = true
+    var includeNotes: Bool = true
 
     init(
         countdownFontSize: Double = Config.defaultCountdownFontSize,
-        countdownFormatRaw: String = Config.defaultCountdownFormatRaw
+        countdownFormatRaw: String = Config.defaultCountdownFormatRaw,
+        includeTarget: Bool = true,
+        includeNotes: Bool = true
     ) {
         self.countdownFontSize = countdownFontSize
         self.countdownFormatRaw = countdownFormatRaw
+        self.includeTarget = includeTarget
+        self.includeNotes = includeNotes
     }
 
     static let defaultCountdownFontSize: Double = 15
@@ -202,6 +208,14 @@ struct ListView: View {
         return .adaptive
     }
 
+    private var includeTarget: Bool {
+        configs.first?.includeTarget ?? true
+    }
+
+    private var includeNotes: Bool {
+        configs.first?.includeNotes ?? true
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -219,6 +233,8 @@ struct ListView: View {
                                             showTarget: showTarget,
                                             showCountdown: showCountdown,
                                             showNotes: showNotes,
+                                            includeTarget: includeTarget,
+                                            includeNotes: includeNotes,
                                             countdownFontSize: countdownFontSize,
                                             countdownFormat: countdownFormat
                                         )
@@ -247,11 +263,13 @@ struct ListView: View {
                                 .symbolVariant(showTitle ? .fill : .none)
                         }
 
-                        Button {
-                            showTarget.toggle()
-                        } label: {
-                            Image(systemName: "d.circle")
-                                .symbolVariant(showTarget ? .fill : .none)
+                        if includeTarget {
+                            Button {
+                                showTarget.toggle()
+                            } label: {
+                                Image(systemName: "d.circle")
+                                    .symbolVariant(showTarget ? .fill : .none)
+                            }
                         }
 
                         Button {
@@ -261,11 +279,13 @@ struct ListView: View {
                                 .symbolVariant(showCountdown ? .fill : .none)
                         }
 
-                        Button {
-                            showNotes.toggle()
-                        } label: {
-                            Image(systemName: "n.circle")
-                                .symbolVariant(showNotes ? .fill : .none)
+                        if includeNotes {
+                            Button {
+                                showNotes.toggle()
+                            } label: {
+                                Image(systemName: "n.circle")
+                                    .symbolVariant(showNotes ? .fill : .none)
+                            }
                         }
                     }
                 }
@@ -294,13 +314,15 @@ struct MilestoneRowView: View {
     let showTarget: Bool
     let showCountdown: Bool
     let showNotes: Bool
+    let includeTarget: Bool
+    let includeNotes: Bool
     let countdownFontSize: Double
     let countdownFormat: CountdownDisplayFormat
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             VStack(alignment: .leading) {
-                if !milestone.notes.isEmpty {
+                if includeNotes && !milestone.notes.isEmpty {
                     Text(milestone.notes)
                         .font(.footnote)
                         .foregroundStyle(.tertiary)
@@ -321,10 +343,12 @@ struct MilestoneRowView: View {
                         .opacity(showCountdown ? 1 : 0)
                 }
 
-                Text(milestone.target.formatted(.dateTime.year().month().day().hour().minute()))
-                    .font(.footnote)
-                    .foregroundStyle(.tertiary)
-                    .opacity(showTarget ? 1 : 0)
+                if includeTarget {
+                    Text(milestone.target.formatted(.dateTime.year().month().day().hour().minute()))
+                        .font(.footnote)
+                        .foregroundStyle(.tertiary)
+                        .opacity(showTarget ? 1 : 0)
+                }
             }
             .padding(.trailing)
         }
@@ -480,12 +504,30 @@ struct ConfigView: View {
                         showTarget: true,
                         showCountdown: true,
                         showNotes: true,
+                        includeTarget: config.includeTarget,
+                        includeNotes: config.includeNotes,
                         countdownFontSize: config.countdownFontSize,
                         countdownFormat: CountdownDisplayFormat(rawValue: config.countdownFormatRaw) ?? .adaptive
                     )
                 }
 
                 Section("Row View") {
+                    Toggle(
+                        "Include date block",
+                        isOn: Binding(
+                            get: { config.includeTarget },
+                            set: { config.includeTarget = $0 }
+                        )
+                    )
+
+                    Toggle(
+                        "Include notes block",
+                        isOn: Binding(
+                            get: { config.includeNotes },
+                            set: { config.includeNotes = $0 }
+                        )
+                    )
+
                     Picker(
                         "Countdown size",
                         selection: Binding(
