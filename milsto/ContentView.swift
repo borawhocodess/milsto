@@ -487,11 +487,11 @@ struct SettingsView: View {
 struct ConfigView: View {
     @Environment(\.modelContext) private var context
     @Query private var configs: [Config]
-    private static let previewTargetOffset: TimeInterval = 223_773
+    private static let previewTargetOffset: TimeInterval = 5_977_231
     private let previewMilestone = Milestone(
         target: Date().addingTimeInterval(Self.previewTargetOffset),
         title: "Sample Milestone",
-        notes: "Row preview"
+        notes: "Row notes preview"
     )
 
     var body: some View {
