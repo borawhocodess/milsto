@@ -25,6 +25,19 @@ final class Milestone {
     }
 }
 
+@Model
+final class Config {
+    var countdownFontSize: Double = Config.defaultCountdownFontSize
+
+    init(countdownFontSize: Double = Config.defaultCountdownFontSize) {
+        self.countdownFontSize = countdownFontSize
+    }
+
+    static let defaultCountdownFontSize: Double = 15
+    static let minCountdownFontSize: Double = 1
+    static let maxCountdownFontSize: Double = 100
+}
+
 struct ContentView: View {
     var body: some View {
         TabView {
@@ -125,6 +138,7 @@ struct AddView: View {
 struct ListView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Milestone.createdAt, order: .reverse) private var milestones: [Milestone]
+    @Query private var configs: [Config]
     @State private var searchText = ""
 
     @AppStorage("showTitle") private var showTitle: Bool = true
@@ -151,6 +165,10 @@ struct ListView: View {
             .sorted { $0.key > $1.key }
     }
 
+    private var countdownFontSize: Double {
+        configs.first?.countdownFontSize ?? Config.defaultCountdownFontSize
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -167,7 +185,8 @@ struct ListView: View {
                                             showTitle: showTitle,
                                             showTarget: showTarget,
                                             showCountdown: showCountdown,
-                                            showNotes: showNotes
+                                            showNotes: showNotes,
+                                            countdownFontSize: countdownFontSize
                                         )
                                     }
                                 }
@@ -241,6 +260,7 @@ struct MilestoneRowView: View {
     let showTarget: Bool
     let showCountdown: Bool
     let showNotes: Bool
+    let countdownFontSize: Double
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
@@ -260,7 +280,7 @@ struct MilestoneRowView: View {
                     Spacer()
 
                     Text(countdownString(to: milestone.target, now: timeline.date))
-                        .font(.subheadline)
+                        .font(.system(size: countdownFontSize))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                         .opacity(showCountdown ? 1 : 0)
@@ -354,6 +374,12 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
+                    NavigationLink(destination: ConfigView()) {
+                        Label("Config", systemImage: "slider.horizontal.3")
+                    }
+                }
+
+                Section {
                     NavigationLink(destination: HelpView()) {
                         Label("Help", systemImage: "lifepreserver")
                     }
@@ -380,6 +406,43 @@ struct SettingsView: View {
                 .listRowBackground(Color.accentColor.opacity(0))
             }
             .navigationTitle("Settings")
+        }
+    }
+}
+
+struct ConfigView: View {
+    @Environment(\.modelContext) private var context
+    @Query private var configs: [Config]
+
+    var body: some View {
+        List {
+            Section("Row View") {
+                if let config = configs.first {
+                    Picker(
+                        "Countdown size",
+                        selection: Binding(
+                            get: { Int(config.countdownFontSize.rounded()) },
+                            set: { config.countdownFontSize = Double($0) }
+                        )
+                    ) {
+                        ForEach(
+                            Int(Config.minCountdownFontSize)...Int(Config.maxCountdownFontSize),
+                            id: \.self
+                        ) { size in
+                            Text("\(size)").tag(size)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+        }
+        .navigationTitle("Config")
+        .onAppear(perform: ensureConfig)
+    }
+
+    private func ensureConfig() {
+        if configs.isEmpty {
+            context.insert(Config())
         }
     }
 }
@@ -420,6 +483,13 @@ struct HelpView: View {
         .modelContainer(SampleData.shared.modelContainer)
 }
 
+#Preview("config") {
+    NavigationStack {
+        ConfigView()
+            .modelContainer(SampleData.shared.modelContainer)
+    }
+}
+
 #Preview("help") {
     NavigationStack {
         HelpView()
@@ -443,7 +513,7 @@ class SampleData {
     }
 
     private init() {
-        let schema = Schema([Milestone.self])
+        let schema = Schema([Milestone.self, Config.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
 
         do {
@@ -456,6 +526,7 @@ class SampleData {
     }
 
     private func insertSampleData() {
+        context.insert(Config())
         for milestone in Milestone.sampleData {
             context.insert(milestone)
         }

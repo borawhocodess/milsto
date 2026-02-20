@@ -13,11 +13,17 @@ struct milstoApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Milestone.self,
+            Config.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let context = container.mainContext
+            if try context.fetchCount(FetchDescriptor<Config>()) == 0 {
+                context.insert(Config())
+            }
+            return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
