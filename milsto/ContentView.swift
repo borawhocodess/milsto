@@ -355,7 +355,14 @@ struct MilestoneRowView: View {
     }
 
     private func countdownString(to target: Date, now: Date) -> String {
-        let totalSeconds = max(0, Int(target.timeIntervalSince(now)))
+        if now >= target {
+            if now.timeIntervalSince(target) < 1 {
+                return "Now"
+            }
+            return "Passed"
+        }
+
+        let totalSeconds = Int(target.timeIntervalSince(now))
 
         let days = totalSeconds / 86_400
         let hours = (totalSeconds % 86_400) / 3_600
