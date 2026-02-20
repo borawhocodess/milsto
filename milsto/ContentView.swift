@@ -463,11 +463,29 @@ struct SettingsView: View {
 struct ConfigView: View {
     @Environment(\.modelContext) private var context
     @Query private var configs: [Config]
+    private static let previewTargetOffset: TimeInterval = 223_773
+    private let previewMilestone = Milestone(
+        target: Date().addingTimeInterval(Self.previewTargetOffset),
+        title: "Sample Milestone",
+        notes: "Row preview"
+    )
 
     var body: some View {
         List {
-            Section("Row View") {
-                if let config = configs.first {
+            if let config = configs.first {
+                Section("Preview") {
+                    MilestoneRowView(
+                        milestone: previewMilestone,
+                        showTitle: true,
+                        showTarget: true,
+                        showCountdown: true,
+                        showNotes: true,
+                        countdownFontSize: config.countdownFontSize,
+                        countdownFormat: CountdownDisplayFormat(rawValue: config.countdownFormatRaw) ?? .adaptive
+                    )
+                }
+
+                Section("Row View") {
                     Picker(
                         "Countdown size",
                         selection: Binding(
