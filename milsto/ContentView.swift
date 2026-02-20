@@ -307,7 +307,7 @@ struct MilestoneRowView: View {
                         .opacity(showNotes ? 1 : 0)
                 }
 
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center) {
                     Text(milestone.title)
                         .font(.headline)
                         .opacity(showTitle ? 1 : 0)
