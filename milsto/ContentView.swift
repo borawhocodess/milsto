@@ -60,7 +60,7 @@ final class Config {
     static let defaultCountdownFontSize: Double = 15
     static let defaultCountdownFormatRaw: String = CountdownDisplayFormat.adaptive.rawValue
     static let minCountdownFontSize: Double = 1
-    static let maxCountdownFontSize: Double = 100
+    static let maxCountdownFontSize: Double = 200
 }
 
 struct ContentView: View {
