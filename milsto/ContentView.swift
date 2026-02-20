@@ -25,15 +25,40 @@ final class Milestone {
     }
 }
 
+enum CountdownDisplayFormat: String, CaseIterable, Identifiable {
+    case digital
+    case compact
+    case adaptive
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .digital:
+            return "Digital"
+        case .compact:
+            return "Compact"
+        case .adaptive:
+            return "Adaptive"
+        }
+    }
+}
+
 @Model
 final class Config {
     var countdownFontSize: Double = Config.defaultCountdownFontSize
+    var countdownFormatRaw: String = Config.defaultCountdownFormatRaw
 
-    init(countdownFontSize: Double = Config.defaultCountdownFontSize) {
+    init(
+        countdownFontSize: Double = Config.defaultCountdownFontSize,
+        countdownFormatRaw: String = Config.defaultCountdownFormatRaw
+    ) {
         self.countdownFontSize = countdownFontSize
+        self.countdownFormatRaw = countdownFormatRaw
     }
 
     static let defaultCountdownFontSize: Double = 15
+    static let defaultCountdownFormatRaw: String = CountdownDisplayFormat.adaptive.rawValue
     static let minCountdownFontSize: Double = 1
     static let maxCountdownFontSize: Double = 100
 }
@@ -169,6 +194,14 @@ struct ListView: View {
         configs.first?.countdownFontSize ?? Config.defaultCountdownFontSize
     }
 
+    private var countdownFormat: CountdownDisplayFormat {
+        if let raw = configs.first?.countdownFormatRaw,
+           let format = CountdownDisplayFormat(rawValue: raw) {
+            return format
+        }
+        return .adaptive
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -186,7 +219,8 @@ struct ListView: View {
                                             showTarget: showTarget,
                                             showCountdown: showCountdown,
                                             showNotes: showNotes,
-                                            countdownFontSize: countdownFontSize
+                                            countdownFontSize: countdownFontSize,
+                                            countdownFormat: countdownFormat
                                         )
                                     }
                                 }
@@ -261,6 +295,7 @@ struct MilestoneRowView: View {
     let showCountdown: Bool
     let showNotes: Bool
     let countdownFontSize: Double
+    let countdownFormat: CountdownDisplayFormat
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
@@ -303,7 +338,22 @@ struct MilestoneRowView: View {
         let minutes = (totalSeconds % 3_600) / 60
         let seconds = totalSeconds % 60
 
-        return String(format: "%02dd %02dh %02dm %02ds", days, hours, minutes, seconds)
+        switch countdownFormat {
+        case .digital:
+            return String(format: "%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+        case .compact:
+            return "\(days)d \(hours)h \(minutes)m \(seconds)s"
+        case .adaptive:
+            if days > 0 {
+                return "\(days)d \(hours)h"
+            } else if hours > 0 {
+                return String(format: "%02dh %02dm %02ds", hours, minutes, seconds)
+            } else if minutes > 0 {
+                return String(format: "%02dm %02ds", minutes, seconds)
+            } else {
+                return "\(seconds)s"
+            }
+        }
     }
 }
 
@@ -430,6 +480,21 @@ struct ConfigView: View {
                             id: \.self
                         ) { size in
                             Text("\(size)").tag(size)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    Picker(
+                        "Countdown format",
+                        selection: Binding(
+                            get: {
+                                CountdownDisplayFormat(rawValue: config.countdownFormatRaw) ?? .adaptive
+                            },
+                            set: { config.countdownFormatRaw = $0.rawValue }
+                        )
+                    ) {
+                        ForEach(CountdownDisplayFormat.allCases) { format in
+                            Text(format.title).tag(format)
                         }
                     }
                     .pickerStyle(.menu)
